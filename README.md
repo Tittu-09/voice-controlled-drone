@@ -1,141 +1,206 @@
-# voice-controlled-drone
-Voice-Controlled Drone Simulation with Obstacle Avoidance Using PyBullet  The project aims to develop a voice-controlled drone simulation using Python and PyBullet, enabling users to control a virtual drone through spoken commands in a three-dimensional environment. The main objective is to simplify drone operation and demonstrate navigation.
 
-# Voice-Controlled Drone Simulation with Obstacle Avoidance Using PyBullet
+<div align="center">
+
+# Voice-Controlled Autonomous Drone
+### Data-Driven System Identification Using SINDy and DMDc
+
+**PX4 SITL · Gazebo · MAVSDK · Vosk · Python**
+
+A simulation-based drone research project combining voice-controlled flight, autonomous navigation, flight telemetry analysis, and data-driven modeling of quadrotor dynamics.
+
+</div>
+
+---
 
 ## Overview
 
-This project implements a voice-controlled drone simulation using Python and PyBullet. It enables users to control a virtual quadcopter through spoken commands in a three-dimensional simulated environment.
+This project explores voice-controlled autonomous drone operation and data-driven system identification using a simulated quadrotor. Built on PX4 Software-in-the-Loop (SITL) and Gazebo, the system allows users to issue flight commands through speech while collecting telemetry data for analyzing drone dynamics.
 
-The system integrates speech recognition, drone movement control, physics-based simulation, and basic obstacle avoidance to demonstrate interactive drone navigation without requiring physical hardware.
-
-## Objectives
-
-- Develop a voice-based interface for controlling a simulated drone.
-- Implement basic drone movements, including takeoff, landing, and directional navigation.
-- Create a 3D simulation environment with obstacles.
-- Demonstrate basic obstacle avoidance during navigation.
-- Provide a foundation for exploring autonomous drone navigation and trajectory planning.
+The project integrates offline speech recognition, flight-control communication, telemetry logging, and mathematical modeling. Two system identification techniques—Sparse Identification of Nonlinear Dynamics (SINDy) and Dynamic Mode Decomposition with control (DMDc)—are used to estimate the drone's behavior from recorded flight data without directly using its underlying equations of motion.
 
 ## Key Features
 
-- **Voice Control:** Control the drone using recognized speech commands.
-- **3D Simulation:** Visualize drone movements in a PyBullet environment.
-- **Drone Movement:** Support takeoff, forward, backward, left, right, up, down, rotation, and landing.
-- **Obstacle Avoidance:** Demonstrate basic obstacle-avoidance functionality.
-- **Camera Tracking:** Follow the drone's movements within the simulation.
-- **Extensible Architecture:** Allow future improvements in terrain modeling and autonomous navigation.
+- **Voice-Controlled Flight:** Execute flight commands using offline speech recognition with Vosk.
+- **PX4 Integration:** Control a simulated quadrotor through PX4 SITL and MAVSDK.
+- **3D Simulation:** Simulate drone flight and environmental interactions in Gazebo.
+- **Navigation Commands:** Support takeoff, landing, directional movement, and saved waypoints.
+- **Flight Data Logging:** Collect attitude, velocity, position, and inertial telemetry.
+- **SINDy Modeling:** Identify candidate nonlinear dynamics using sparse regression.
+- **DMDc Modeling:** Estimate a linear state-space model from state and control data.
+- **Model Validation:** Compare identified model predictions against recorded trajectories.
 
-## Technologies Used
+## System Architecture
+
+```text
+           Voice Input
+                |
+                v
+      Vosk Speech Recognition
+                |
+                v
+       voice_control.py
+                |
+              MAVSDK
+                |
+                v
+            PX4 SITL
+                |
+                v
+       Gazebo Quadrotor
+                |
+                v
+        Flight Telemetry
+                |
+                v
+          data_logger.py
+                |
+                v
+          Flight Dataset
+                |
+          +-----+-----+
+          |           |
+          v           v
+       SINDy         DMDc
+          |           |
+          v           v
+     Nonlinear      Linear
+       Model         Model
+```
+
+## Technology Stack
 
 | Technology | Purpose |
 |---|---|
-| Python | Core programming and control logic |
-| PyBullet | Physics simulation and 3D environment |
-| SpeechRecognition | Voice command recognition |
-| NumPy | Numerical computations, if used |
+| Python | Application logic and data analysis |
+| PX4 SITL | Software-based flight controller |
+| Gazebo | Physics-based drone simulation |
+| MAVSDK | Flight-control and telemetry interface |
+| Vosk | Offline speech recognition |
+| SINDy | Sparse nonlinear dynamics identification |
+| DMDc | Linear system identification with control |
+| NumPy / Pandas | Numerical computing and data processing |
+| pyulog | PX4 flight-log conversion and analysis |
+| QGroundControl | Flight monitoring and visualization |
 
 ## Project Structure
 
 ```text
-Voice-Controlled-Drone/
-├── main.py
-├── requirements.txt
-├── README.md
-└── assets/                 # Optional models and resources
+project/
+├── voice_control.py
+├── data_logger.py
+├── fit_sindy.py
+├── fit_dmdc.py
+├── flight_data.csv
+└── README.md
 ```
 
-*Note: Update the filenames and folders above to match your actual project structure.*
+*Adjust the structure to match the files actually present in your repository.*
 
-## Prerequisites
+## Getting Started
 
-- Python 3.10 or a compatible Python version
-- A computer capable of running a 3D simulation
-- A working microphone for voice commands
-- Required Python libraries
+### Prerequisites
 
-## Installation
+- Windows with WSL2 and Ubuntu, or a compatible Linux environment
+- PX4 Autopilot source code
+- Gazebo-compatible PX4 simulation setup
+- Python 3 and pip
+- QGroundControl (optional for visualization and manual override)
+- Microphone access for voice commands
 
-### 1. Clone the repository
+### 1. Start the PX4 simulation
+
+From the PX4-Autopilot directory:
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
-cd <YOUR_PROJECT_FOLDER>
+HEADLESS=1 make px4_sitl gz_x500
 ```
 
-### 2. Create a virtual environment
+At the PX4 shell prompt, configure the additional MAVLink connection if required by your setup:
+
+```text
+mavlink start -u 14535 -o 14530 -r 4000 -t 127.0.0.1
+```
+
+### 2. Start the telemetry logger
+
+In a separate terminal, navigate to your project directory and run:
 
 ```bash
-python -m venv venv
+python3 data_logger.py
 ```
 
-### 3. Activate the environment
+### 3. Start voice control
 
-**Windows:**
+Open another terminal and execute:
 
 ```bash
-venv\Scripts\activate
+python3 voice_control.py
 ```
 
-### 4. Install dependencies
+Ensure the required Python dependencies and Vosk speech model are installed and configured.
+
+### 4. Identify the drone dynamics
+
+After completing a flight and stopping the logger, run the relevant analysis script:
 
 ```bash
-python -m pip install --upgrade pip
-pip install pybullet numpy SpeechRecognition PyAudio
+python3 fit_sindy.py
 ```
 
-## Running the Project
+For DMDc, run the corresponding script if it exists in your repository.
 
-Run the main Python script from the project directory:
+## Mathematical Methods
 
-```bash
-python main.py
-```
+### Sparse Identification of Nonlinear Dynamics (SINDy)
 
-Replace `main.py` with the actual entry-point filename if it is different.
+SINDy uses a library of candidate functions and sparse regression to identify a compact representation of nonlinear system dynamics from observed data.
 
-Once the simulation starts, use the supported voice commands to control the drone. Ensure microphone permissions are enabled on your system.
+### Dynamic Mode Decomposition with Control (DMDc)
 
-## Methodology
+DMDc estimates a linear state-space model:
 
-1. Initialize the PyBullet simulation environment.
-2. Create the virtual drone and simulation objects.
-3. Capture and process voice commands using speech recognition.
-4. Translate recognized commands into drone movement instructions.
-5. Update the drone's movement within the simulation.
-6. Apply the implemented obstacle-avoidance logic.
-7. Visualize the drone's position and movement in real time.
+\[
+x_{k+1}=Ax_k+Bu_k
+\]
 
-## Future Enhancements
+where \(x_k\) represents the system state and \(u_k\) represents the control input.
 
-- Digital Elevation Model (DEM)-based artificial terrain generation.
-- Interpolation techniques for terrain height estimation.
-- B-spline trajectory planning for smoother flight paths.
-- Improved collision detection and terrain-aware navigation.
-- Advanced autonomous path planning and reinforcement learning.
+### Model Evaluation
+
+The identified models can be evaluated by comparing predicted states with recorded flight trajectories. Model accuracy depends on data quality, flight excitation, and the selected model structure.
 
 ## Applications
 
-- Drone navigation research and education.
-- Voice-controlled robotics.
-- Simulation-based testing of control algorithms.
-- Autonomous navigation experimentation.
-- Robotics and artificial intelligence learning.
+- Autonomous drone research
+- Voice-controlled robotics
+- Flight dynamics analysis
+- Data-driven system identification
+- Simulation-based control engineering
+- Model validation and trajectory analysis
 
 ## Limitations
 
-The project operates in a simulated environment and does not directly control a physical drone. Obstacle avoidance depends on the implemented logic, and reliable operation in complex environments requires additional testing and development.
+- The system operates in simulation and does not directly control a physical drone.
+- Identification accuracy depends on sufficiently varied and reliable flight data.
+- Linear DMDc models may be less accurate during large-angle maneuvers.
+- Some maneuvers and telemetry topics depend on the PX4 build and available interfaces.
+- Voice recognition performance depends on microphone quality and environmental noise.
 
-## Contributing
+## Future Enhancements
 
-Contributions, suggestions, and improvements are welcome. Fork the repository, create a feature branch, and submit a pull request with your proposed changes.
+- Improved flight-data preprocessing and synchronization
+- Terrain-aware navigation and artificial elevation models
+- B-spline trajectory generation and smooth path planning
+- Closed-loop validation of identified models
+- Improved nonlinear modeling and autonomous control
 
-## License
+## Safety Notice
 
-This project is intended for educational and research purposes. Add an appropriate open-source license, such as the MIT License, if you wish to permit reuse and redistribution.
+This project is intended for simulation, academic research, and educational purposes. Test changes in a controlled simulation before considering any physical drone implementation.
 
 ## Author
 
-**Project:** Voice-Controlled Drone Simulation with Obstacle Avoidance Using PyBullet
+**Project:** Voice-Controlled Autonomous Drone with Data-Driven System Identification
 
-Developed as an academic project exploring voice interaction, drone control, physics simulation, and navigation.
+**Focus Areas:** Autonomous Systems · Robotics · Flight Dynamics · System Identification
+
